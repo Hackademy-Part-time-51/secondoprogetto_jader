@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactMail;
 
 class UserController extends Controller
 {
@@ -54,6 +56,27 @@ class UserController extends Controller
     }
     public function contact() {
         return view('contact');
+    }
+    public function send(Request $request){
+        $request->validate([
+            'name' => ['string', 'required'],
+            'surname' => ['string', 'required'],
+            'phone' => ['integer'],
+            'email' => ['required', 'email'],
+            'web' => ['url:http,https'],
+            'message' => ['required', 'string', 'min:10', 'max:200'],
+        ]
+        );
+        $data = [
+            'name' => 'Utente ' . strtolower($request->name),
+            'surname' => $request->input('surname'),
+            'phone' => $request->input('phone'),
+            'email' => $request->input('email'),
+            'web' => $request->input('web'),
+            'message' => $request->message,
+        ];
+        Mail::to($data['email'])->send(new ContactMail($data));
+        return redirect('/contact')->with('success', 'Email inviata correttamente!');
     }
 
 }
